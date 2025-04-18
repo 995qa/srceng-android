@@ -23,14 +23,33 @@ jobs:
         cd srcsdk
         git submodule init && git submodule update
         cd ../
-        DEPLOY_BRANCH=srceng-old-port COMMIT=$(git rev-parse HEAD) scripts/workflow.sh
+
+        scripts/workflow.sh
+        mkdir $HOME/.android
+        cp debug.keystore $HOME/.android
+        JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ ANDROID_HOME=android-sdk/ ant debug
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2.2.3
+      with:
+        name: apk
+        path: bin/srceng-debug.apk
 
     - name: Upload files
+      uses: dmnemec/copy_file_to_another_repo_action@v1.1.1
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      with:
+        source_file: 'bin/srceng-debug.apk'
+        destination_repo: 'nillerusr/srceng-deploy'
+        destination_branch: 'srceng-old-port'
+        user_email: '42746659+nillerusr@users.noreply.github.com'
+        user_name: 'nillerusr'
+
+    - name: Post link to Discord
       shell: bash
       env:
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-        GH_TOKEN: ${{ secrets.API_GITHUB_TOKEN }}
       run: |
-        DEPLOY_BRANCH=srceng-old-port scripts/upload-to-github.sh bin/srceng-debug.apk version
-        CHANNEL_ID=801092155090927626 python3 scripts/send-to-discord.py "Commits history: https://github.com/nillerusr/srceng-android/commits/con-wrappers\nBuild: https://github.com/nillerusr/srceng-deploy/\nBuild finished at: $(date +%Y-%m-%d-%H:%M)"
-
+        echo -e "Commits history: https://github.com/nillerusr/srceng-android/commits/con-wrappers\nBuild: https://github.com/nillerusr/srceng-deploy/raw/srceng-old-port/srceng-debug.apk\nBuild finished at: $(date +%Y-%m-%d-%H:%M)" > text
+        python3 scripts/upload-to-discord.py
