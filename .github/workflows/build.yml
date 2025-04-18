@@ -37,21 +37,9 @@ jobs:
         name: apk
         path: bin/srceng-debug.apk
 
-    - name: Upload files
-      uses: dmnemec/copy_file_to_another_repo_action@v1.1.1
-      env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-      with:
-        source_file: 'bin/srceng-debug.apk'
-        destination_repo: 'nillerusr/srceng-deploy'
-        destination_branch: 'srceng-old-port'
-        user_email: '42746659+nillerusr@users.noreply.github.com'
-        user_name: 'nillerusr'
 
-    - name: Post link to Discord
-      shell: bash
-      env:
-        DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-      run: |
-        echo -e "Commits history: https://github.com/nillerusr/srceng-android/commits/con-wrappers\nBuild: https://github.com/nillerusr/srceng-deploy/raw/srceng-old-port/srceng-debug.apk\nBuild finished at: $(date +%Y-%m-%d-%H:%M)" > text
-        python3 scripts/upload-to-discord.py
+       - name: Upload artifact
+         uses: actions/upload-artifact@v4
+         with:
+           name: apk
+           path: bin/srceng*.apk
